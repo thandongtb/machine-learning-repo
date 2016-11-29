@@ -1,8 +1,15 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import sklearn
 from sklearn import linear_model
+from sklearn.metrics import mean_absolute_error
+from sklearn.externals import joblib
+from sklearn.linear_model import Ridge
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import PolynomialFeatures
 
 def getData():
     # Get home data from CSV file
@@ -22,14 +29,13 @@ def linearRegressionModel(X_train, Y_train, X_test, Y_test):
 
     return score_trained
 
-def lassoRegressionModel(X_train, Y_train, X_test, Y_test):
-    lasso_linear = linear_model.Lasso(alpha=1.0)
-    # Training process
-    lasso_linear.fit(X_train, Y_train)
-    # Evaluating the model
-    score_trained = lasso_linear.score(X_test, Y_test)
+def polynomialRegression(X_train, Y_train, X_test, Y_test, degree):
+    poly_model = Pipeline([('poly', PolynomialFeatures(degree)),
+                           ('linear', linear_model.LinearRegression(fit_intercept=False))])
+    poly_model = poly_model.fit(X_train, Y_train)
+    score_poly_trained = poly_model.score(X_test, Y_test)
 
-    return score_trained
+    return score_poly_trained
 
 if __name__ == "__main__":
     data = getData()
@@ -54,6 +60,6 @@ if __name__ == "__main__":
         # Linear Regression Model
         linearScore = linearRegressionModel(X_train, Y_train, X_test, Y_test)
         print 'Linear Score = ' , linearScore
-        # LASSO Regression Model
-        lassoScore = lassoRegressionModel(X_train, Y_train, X_test, Y_test)
-        print 'Lasso Score = ', lassoScore
+        # Poly Regression Model
+        polyScore = polynomialRegression(X_train, Y_train, X_test, Y_test, 2)
+        print 'Poly Score = ', polyScore
