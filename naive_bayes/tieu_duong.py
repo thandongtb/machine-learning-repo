@@ -5,7 +5,7 @@ import sys
 
 # Load data tu CSV file
 
-def loadDataFromCsv(filename):
+def load_data(filename):
     lines = csv.reader(open(filename, "rb"))
     dataset = list(lines)
     for i in range(len(dataset)):
@@ -15,7 +15,7 @@ def loadDataFromCsv(filename):
 
 # Phan chia tap du lieu theo class
 
-def separateByClass(dataset):
+def separate_data(dataset):
     separated = {}
     for i in range(len(dataset)):
         vector = dataset[i]
@@ -27,7 +27,7 @@ def separateByClass(dataset):
 
 # Phan chia tap du lieu thanh training va testing. Co the dung train_test_split
 
-def splitDataset(dataset, splitRatio):
+def split_data(dataset, splitRatio):
     trainSize = int(len(dataset) * splitRatio)
     trainSet = []
     copy = list(dataset)
@@ -43,9 +43,8 @@ def mean(numbers):
     return sum(numbers) / float(len(numbers))
 
 # Tinh toan do lech chuan cho tung thuoc tinh
-# https://i.ytimg.com/vi/zaSt2WkP8eE/maxresdefault.jpg
 
-def standardDeviation(numbers):
+def standard_deviation(numbers):
     avg = mean(numbers)
     variance = sum([pow(x - avg, 2) for x in numbers]) / float(len(numbers) - 1)
 
@@ -54,14 +53,14 @@ def standardDeviation(numbers):
 # Gia tri trung binh , do lech chuan
 
 def summarize(dataset):
-    summaries = [(mean(attribute), standardDeviation(attribute)) for attribute in zip(*dataset)]
+    summaries = [(mean(attribute), standard_deviation(attribute)) for attribute in zip(*dataset)]
     del summaries[-1]
 
     return summaries
 
 
-def summarizeByClass(dataset):
-    separated = separateByClass(dataset)
+def summarize_by_class(dataset):
+    separated = separate_data(dataset)
     summaries = {}
     for classValue, instances in separated.iteritems():
         summaries[classValue] = summarize(instances)
@@ -71,27 +70,27 @@ def summarizeByClass(dataset):
 # Tinh toan xac suat theo phan phoi Gause cua bien lien tuc
 # http://sites.nicholas.duke.edu/statsreview/files/2013/06/normpdf1.jpg
 
-def calculateProbability(x, mean, stdev):
+def calculate_prob(x, mean, stdev):
     exponent = math.exp(-(math.pow(x - mean, 2) / (2 * math.pow(stdev, 2))))
 
     return (1 / (math.sqrt(2 * math.pi) * stdev)) * exponent
 
 # Tinh xac suat cho moi thuoc tinh phan chia theo class
-def calculateClassProbabilities(summaries, inputVector):
+def calculate_class_prob(summaries, inputVector):
     probabilities = {}
     for classValue, classSummaries in summaries.iteritems():
         probabilities[classValue] = 1
         for i in range(len(classSummaries)):
             mean, stdev = classSummaries[i]
             x = inputVector[i]
-            probabilities[classValue] *= calculateProbability(x, mean, stdev)
+            probabilities[classValue] *= calculate_prob(x, mean, stdev)
 
     return probabilities
 
 # Du doan vector thuoc phan lop nao
 
 def predict(summaries, inputVector):
-    probabilities = calculateClassProbabilities(summaries, inputVector)
+    probabilities = calculate_class_prob(summaries, inputVector)
     bestLabel, bestProb = None, -1
     for classValue, probability in probabilities.iteritems():
         if bestLabel is None or probability > bestProb:
@@ -100,9 +99,9 @@ def predict(summaries, inputVector):
 
     return bestLabel
 
-# Du doan tap du lieu training thuoc vao phan lop nao
+# Du doan tap du lieu testing thuoc vao phan lop nao
 
-def getPredictions(summaries, testSet):
+def get_predictions(summaries, testSet):
     predictions = []
     for i in range(len(testSet)):
         result = predict(summaries, testSet[i])
@@ -110,9 +109,9 @@ def getPredictions(summaries, testSet):
 
     return predictions
 
-# In ket qua phan lop
+# Tinh toan do chinh xac cua phan lop
 
-def getAccuracy(testSet, predictions):
+def get_accuracy(testSet, predictions):
     correct = 0
     for i in range(len(testSet)):
         if testSet[i][-1] == predictions[i]:
@@ -120,25 +119,42 @@ def getAccuracy(testSet, predictions):
 
     return (correct / float(len(testSet))) * 100.0
 
-def predictPreview(summaries, testSet, size):
-    if (size <= len(testSet)):
-        for i in range(size):
-            print('\nTest[{0}] = {1}\nCorrect class = {2} Predict class = {3}\n').format(i, testSet[i], testSet[i][-1], predict(summaries, testSet[i]))
+def get_data_label(dataset):
+    data = []
+    label = []
+    for x in dataset:
+        data.append(x[:8])
+        label.append(x[-1])
 
-    return 0
+    return data, label
+
 def main():
     filename = 'tieu_duong.csv'
     splitRatio = 0.8
-    dataset = loadDataFromCsv(filename)
-    trainingSet, testSet = splitDataset(dataset, splitRatio)
+    dataset = load_data(filename)
+    trainingSet, testSet = split_data(dataset, splitRatio)
+
     print('Data size {0} \nTraining Size={1} \nTest Size={2}').format(len(dataset), len(trainingSet), len(testSet))
+
     # prepare model
-    summaries = summarizeByClass(trainingSet)
-    predictPreview(summaries, testSet, 10)
+    summaries = summarize_by_class(trainingSet)
+    get_data_label(trainingSet)
     # test model
-    predictions = getPredictions(summaries, testSet)
-    accuracy = getAccuracy(testSet, predictions)
-    print('Accuracy: {0}%').format(accuracy)
+    predictions = get_predictions(summaries, testSet)
+    accuracy = get_accuracy(testSet, predictions)
+    print('Accuracy of my implement: {0}%').format(accuracy)
+
+    # Compare with sklearn
+    dataTrain, labelTrain = get_data_label(trainingSet)
+    dataTest, labelTest = get_data_label(testSet)
+
+    from sklearn.naive_bayes import GaussianNB
+    clf = GaussianNB()
+    clf.fit(dataTrain, labelTrain)
+
+    score = clf.score(dataTest, labelTest)
+
+    print('Accuracy of sklearn: {0}%').format(score*100)
 
 
 if __name__ == "__main__":
