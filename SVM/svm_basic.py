@@ -38,7 +38,7 @@ def getSVMPlot(iris):
     C = 1.0  # SVM regularization parameter
     svc = svm.SVC(kernel='linear', C=C).fit(X, y)
     rbf_svc = svm.SVC(kernel='rbf', gamma=0.7, C=C).fit(X, y)
-    poly_svc = svm.SVC(kernel='poly', degree=3, C=C).fit(X, y)
+    poly_svc = svm.SVC(kernel='poly', degree=2, C=C).fit(X, y)
     lin_svc = svm.LinearSVC(C=C).fit(X, y)
 
     # create a mesh to plot in
@@ -48,10 +48,10 @@ def getSVMPlot(iris):
                          np.arange(y_min, y_max, h))
 
     # title for the plots
-    titles = ['SVC with linear kernel',
+    titles = ['SVM with linear kernel',
               'LinearSVC (linear kernel)',
-              'SVC with RBF kernel',
-              'SVC with polynomial (degree 3) kernel']
+              'SVM with RBF kernel',
+              'SVM with polynomial (degree 2) kernel']
 
     for i, clf in enumerate((svc, lin_svc, rbf_svc, poly_svc)):
         # Plot the decision boundary. For that, we will assign a color to each
