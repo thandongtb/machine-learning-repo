@@ -74,5 +74,5 @@ if __name__ == "__main__":
         print 'Lasso Score = ', lassoScore
 
         # Poly Regression Model
-        polyScore = polynomialRegression(X_train, Y_train, X_test, Y_test, 2)
+        polyScore = polynomialRegression(X_train, Y_train, X_test, Y_test, 3)
         print 'Poly Score = ', polyScore
